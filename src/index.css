@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  /* Research-Backed ASD Palette 
+     This automatically creates classes like 'bg-asd-bg', 'text-asd-text'
+  */
+  
+  /* Calm Mode (Default) */
+  --color-asd-bg: #F4F7F6;       /* Calm Grey-Green */
+  --color-asd-surface: #FFFFFF;  /* White Surface */
+  --color-asd-text: #2C3E50;     /* Dark Blue-Grey */
+  --color-asd-accent: #5DADE2;   /* Soft Sky Blue */
+  --color-asd-error: #CD6155;    /* Soft Coral */
+  --color-asd-success: #52BE80;  /* Soft Sage */
+
+  /* Low Stimulation Mode Colors */
+  --color-asd-low-bg: #FDFCF0;   /* Warm Paper */
+  --color-asd-low-text: #4E4E4E; /* Soft Grey */
+}
+
+/* Global Transitions for "Sensory Safety" */
+body {
+  transition-property: background-color, color, border-color;
+  transition-duration: 0.5s;
+  transition-timing-function: ease-in-out;
+}
