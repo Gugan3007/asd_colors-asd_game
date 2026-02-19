@@ -333,7 +333,7 @@ const SPACE_ICONS = [
  *   PICTOGRAPH    — Rows of icons (each icon = 1 unit)
  *   DOT_PLOT      — Colored dots stacked in columns
  */
-const SCAN_SUBTYPES = ['COUNT', 'MOST', 'LEAST', 'TOTAL', 'COMPARE_BARS'];
+const SCAN_SUBTYPES = ['COUNT', 'MOST', 'LEAST', 'TOTAL', 'COMPARE_BARS', 'BUILD_CHART'];
 const CHART_TYPES = ['BAR', 'PICTOGRAPH', 'DOT_PLOT', 'PIE_CHART'];
 
 export function generateScanDataQuestion(level) {
@@ -363,9 +363,9 @@ export function generateScanDataQuestion(level) {
     // Choose subtype based on level — beginners get COUNT/TOTAL, advanced get all
     let availableSubtypes;
     if (level <= 1) {
-        availableSubtypes = ['COUNT', 'TOTAL'];
+        availableSubtypes = ['COUNT', 'TOTAL', 'BUILD_CHART'];
     } else if (level <= 3) {
-        availableSubtypes = ['COUNT', 'MOST', 'LEAST', 'TOTAL'];
+        availableSubtypes = ['COUNT', 'MOST', 'LEAST', 'TOTAL', 'BUILD_CHART'];
     } else {
         availableSubtypes = [...SCAN_SUBTYPES];
     }
@@ -456,6 +456,17 @@ export function generateScanDataQuestion(level) {
             ]);
             break;
         }
+        case 'BUILD_CHART': {
+            // Interactive bar chart building — CRA representational stage
+            // Kid builds bars to match the dataset counts
+            targetIcon = null;
+            highlightIcon = null;
+            answer = dataset.map(d => d.count); // Array of target counts
+            answerColor = 'cyan';
+            questionText = '🏗️ Build the bar chart to match the data!';
+            choices = []; // No orbs needed — uses InteractiveBarChart
+            break;
+        }
         default: {
             // Fallback to COUNT
             const idx = 0;
@@ -472,8 +483,10 @@ export function generateScanDataQuestion(level) {
         }
     }
 
-    // Pick a random chart type for visual variety
-    const chartType = CHART_TYPES[randomInt(0, CHART_TYPES.length - 1)];
+    // Pick a random chart type for visual variety (BUILD_CHART always uses BAR grid)
+    const chartType = subtype === 'BUILD_CHART'
+        ? 'BAR'
+        : CHART_TYPES[randomInt(0, CHART_TYPES.length - 1)];
 
     return {
         type: MISSION_TYPES.SCAN_DATA,
@@ -487,6 +500,7 @@ export function generateScanDataQuestion(level) {
         choices,
         questionText,
         isIconChoice: subtype === 'MOST' || subtype === 'LEAST',
+        isBuildChart: subtype === 'BUILD_CHART',
     };
 }
 

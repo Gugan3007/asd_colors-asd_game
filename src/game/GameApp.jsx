@@ -329,6 +329,31 @@ export default function GameApp() {
     }
   }, [isIdle, gameState]);
 
+  // ─── Window Blur/Focus Detection (Attention Management for ASD) ─── //
+  useEffect(() => {
+    const handleWindowBlur = () => {
+      if (gameState === GAME_STATES.PLAYING) {
+        setRoboEmotion('confused');
+        showRoboMessage('Come back, navigator! 🛸', 4000);
+      }
+    };
+    const handleWindowFocus = () => {
+      if (gameState === GAME_STATES.PLAYING) {
+        setRoboEmotion('excited');
+        showRoboMessage('Welcome back! Let\'s continue! 🌟', 2500);
+        setTimeout(() => {
+          if (gameState === GAME_STATES.PLAYING) setRoboEmotion('idle');
+        }, 2500);
+      }
+    };
+    window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('focus', handleWindowFocus);
+    return () => {
+      window.removeEventListener('blur', handleWindowBlur);
+      window.removeEventListener('focus', handleWindowFocus);
+    };
+  }, [gameState, showRoboMessage]);
+
   // ─── Generate Next Question ─── //
   const nextQuestion = useCallback((newLevel, newQuestionIndex) => {
     const mType = getMissionType(newQuestionIndex);
@@ -472,6 +497,66 @@ export default function GameApp() {
     }
   }, [gameState, question, level, progress, questionIndex, combo, play, registerCorrect, registerWrong, nextQuestion]);
 
+  // ─── Handle BUILD_CHART Submission (Interactive Bar Chart) ─── //
+  const handleBuildChartSubmit = useCallback((builtHeights) => {
+    if (gameState !== GAME_STATES.PLAYING) return;
+
+    // Compare each built height to the dataset target
+    const isCorrect = question.dataset.every((d, i) => builtHeights[i] === d.count);
+
+    if (isCorrect) {
+      play('success');
+      registerCorrect();
+      setIsAnswered(true);
+      setIsBoosting(true);
+      setShowParticles(true);
+      setRoboEmotion('cheering');
+      setScore((prev) => prev + level * 15); // Bonus points for chart building
+      setGameState(GAME_STATES.CELEBRATING);
+      showRoboMessage(combo > 1 ? `Combo x${combo}! Chart Master! 🔥` : 'Perfect chart! 📊🎯');
+
+      setShowFlash(true);
+      setTimeout(() => setShowFlash(false), 600);
+
+      if (combo + 1 >= 2) {
+        setTimeout(() => play('combo'), 300);
+      }
+
+      celebrationTimerRef.current = setTimeout(() => {
+        setShowParticles(false);
+        setIsBoosting(false);
+
+        const newProgress = progress + 1;
+        setProgress(newProgress);
+
+        if (newProgress >= QUESTIONS_PER_LEVEL) {
+          play('levelUp');
+          setGameState(GAME_STATES.LEVEL_COMPLETE);
+          setRoboEmotion('cheering');
+          showRoboMessage('Sector cleared! Warping out! 🌌');
+        } else {
+          const newIdx = questionIndex + 1;
+          setQuestionIndex(newIdx);
+          nextQuestion(level, newIdx);
+        }
+      }, CELEBRATION_DURATION + 500); // Extra time for chart appreciation
+    } else {
+      play('error');
+      registerWrong();
+      setGameState(GAME_STATES.WRONG_FEEDBACK);
+      setRoboEmotion('confused');
+      showRoboMessage('Almost there! Check your bars! ⚠️');
+
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 400);
+
+      wrongTimerRef.current = setTimeout(() => {
+        setGameState(GAME_STATES.PLAYING);
+        setRoboEmotion('idle');
+      }, WRONG_FEEDBACK_DURATION);
+    }
+  }, [gameState, question, level, progress, questionIndex, combo, play, registerCorrect, registerWrong, nextQuestion, showRoboMessage]);
+
   // ─── Handle Next Level ─── //
   const handleNextLevel = useCallback(() => {
     play('warp');
@@ -606,10 +691,12 @@ export default function GameApp() {
               <EquationDisplay
                 question={question}
                 isAnswered={isAnswered}
+                onBuildChartSubmit={handleBuildChartSubmit}
               />
             </div>
 
-            {/* ── Orbs Area ── */}
+            {/* ── Orbs Area (hidden for BUILD_CHART — uses InteractiveBarChart instead) ── */}
+            {!question.isBuildChart && (
             <div className="orbs-area w-full flex justify-center">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -637,6 +724,7 @@ export default function GameApp() {
                 </motion.div>
               </AnimatePresence>
             </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

@@ -14,6 +14,7 @@
 
 import { motion } from 'framer-motion';
 import { MISSION_TYPES } from '../missions/MissionEngine';
+import InteractiveBarChart from './InteractiveBarChart';
 
 // Staggered container — children animate in sequence
 const containerVariants = {
@@ -133,7 +134,7 @@ function NumberWithDots({ num, showDots, color }) {
 //   MAIN COMPONENT
 // ══════════════════════════════════════════
 
-export default function EquationDisplay({ question, isAnswered }) {
+export default function EquationDisplay({ question, isAnswered, onBuildChartSubmit }) {
     const { type } = question;
 
     // Route to the correct layout based on mission type
@@ -143,7 +144,7 @@ export default function EquationDisplay({ question, isAnswered }) {
         case MISSION_TYPES.BALANCE_CARGO:
             return <ComparisonLayout question={question} isAnswered={isAnswered} />;
         case MISSION_TYPES.SCAN_DATA:
-            return <ScanDataLayout question={question} isAnswered={isAnswered} />;
+            return <ScanDataLayout question={question} isAnswered={isAnswered} onBuildChartSubmit={onBuildChartSubmit} />;
         case MISSION_TYPES.FUEL_ENGINE:
         default:
             return <EquationLayout question={question} isAnswered={isAnswered} />;
@@ -868,9 +869,10 @@ function QuestionPrompt({ question, isAnswered }) {
  *   2. Chart (Bar / Pictograph / Dot Plot) — auto-selected
  *   3. Question prompt with answer drop zone
  */
-function ScanDataLayout({ question, isAnswered }) {
-    const { dataset, highlightIcon, chartType } = question;
-    const chartLabel = CHART_LABELS[chartType] || CHART_LABELS.BAR;
+function ScanDataLayout({ question, isAnswered, onBuildChartSubmit }) {
+    const { dataset, highlightIcon, chartType, subtype } = question;
+    const isBuildChart = subtype === 'BUILD_CHART';
+    const chartLabel = isBuildChart ? '🏗️ Build Chart' : (CHART_LABELS[chartType] || CHART_LABELS.BAR);
 
     return (
         <motion.div
@@ -884,7 +886,7 @@ function ScanDataLayout({ question, isAnswered }) {
             {/* Holographic scan line */}
             <div className="scan-line" />
 
-            {/* Section 1 — Grouped Countable Icons */}
+            {/* Section 1 — Grouped Countable Icons (Concrete stage of CRA) */}
             <motion.div variants={itemVariants} className="w-full">
                 <GroupedIcons dataset={dataset} highlightIcon={highlightIcon} />
             </motion.div>
@@ -896,20 +898,32 @@ function ScanDataLayout({ question, isAnswered }) {
                 <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)' }} />
             </div>
 
-            {/* Section 2 — Chart (routed by type) */}
-            <motion.div variants={itemVariants} className="w-full flex justify-center">
-                <ChartDisplay chartType={chartType} dataset={dataset} highlightIcon={highlightIcon} />
-            </motion.div>
+            {isBuildChart ? (
+                /* BUILD_CHART — Interactive bar building (Representational stage of CRA) */
+                <motion.div variants={itemVariants} className="w-full">
+                    <InteractiveBarChart
+                        dataset={dataset}
+                        maxCount={Math.max(...dataset.map(d => d.count))}
+                        onComplete={onBuildChartSubmit}
+                        isAnswered={isAnswered}
+                    />
+                </motion.div>
+            ) : (
+                /* Standard passive chart + question prompt */
+                <>
+                    <motion.div variants={itemVariants} className="w-full flex justify-center">
+                        <ChartDisplay chartType={chartType} dataset={dataset} highlightIcon={highlightIcon} />
+                    </motion.div>
 
-            {/* Divider */}
-            <div className="w-full flex items-center gap-3">
-                <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)' }} />
-                <span className="text-sm uppercase tracking-widest text-slate-500 font-bold">🎯 mission</span>
-                <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)' }} />
-            </div>
+                    <div className="w-full flex items-center gap-3">
+                        <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)' }} />
+                        <span className="text-sm uppercase tracking-widest text-slate-500 font-bold">🎯 mission</span>
+                        <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)' }} />
+                    </div>
 
-            {/* Section 3 — Question Prompt */}
-            <QuestionPrompt question={question} isAnswered={isAnswered} />
+                    <QuestionPrompt question={question} isAnswered={isAnswered} />
+                </>
+            )}
         </motion.div>
     );
 }

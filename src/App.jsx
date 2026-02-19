@@ -10,6 +10,45 @@ import GamePage from './game/GamePage';
 
 /**
  * ============================================================
+ * ERROR BOUNDARY — Catches runtime JS crashes so the page
+ * shows a helpful message instead of a blank white screen.
+ * ============================================================
+ */
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    console.error('ErrorBoundary caught:', error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 40, fontFamily: 'sans-serif', maxWidth: 600, margin: '0 auto' }}>
+          <h1 style={{ color: '#CD6155' }}>⚠️ Something went wrong</h1>
+          <p style={{ color: '#2C3E50' }}>The app encountered an error. Please refresh the page.</p>
+          <pre style={{ background: '#f5f5f5', padding: 16, borderRadius: 8, overflow: 'auto', fontSize: 13 }}>
+            {this.state.error?.message}
+          </pre>
+          <button
+            onClick={() => window.location.reload()}
+            style={{ marginTop: 16, padding: '10px 24px', background: '#5DADE2', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 16 }}
+          >
+            🔄 Reload Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+/**
+ * ============================================================
  * FUNCTIONAL COMPONENT - HomePage (Stateless Component)
  * ============================================================
  * This demonstrates:
@@ -198,10 +237,12 @@ const AppContent = () => {
  */
 export default function App() {
   return (
-    <ThemeProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
