@@ -6,6 +6,7 @@ import SafeCard from './components/SafeCard';
 import SafeMessage from './components/SafeMessage';
 import ImageGallery from './components/ImageGallery';
 import ChildProfileForm from './components/ChildProfileForm';
+import GamePage from './game/GamePage';
 
 /**
  * ============================================================
@@ -46,6 +47,14 @@ const HomePage = () => {
           }`}
         >
           👤 Create Profile
+        </Link>
+        <Link 
+          to="/game" 
+          className={`px-4 py-2 rounded-lg font-medium ${
+            isLowStim ? 'bg-stone-200 text-stone-600' : 'bg-emerald-500 text-white hover:bg-emerald-600'
+          }`}
+        >
+          🧮 Teach Math (Lab2)
         </Link>
       </div>
 
@@ -120,6 +129,14 @@ const ProfilePage = () => {
         >
           👤 Create Profile
         </Link>
+        <Link 
+          to="/game" 
+          className={`px-4 py-2 rounded-lg font-medium ${
+            isLowStim ? 'bg-stone-200 text-stone-600' : 'bg-emerald-500 text-white hover:bg-emerald-600'
+          }`}
+        >
+          🧮 Teach Math (Lab2)
+        </Link>
       </div>
 
       {/* SafeCard - STATELESS COMPONENT */}
@@ -162,6 +179,7 @@ const AppContent = () => {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/game" element={<GamePage />} />
           </Routes>
         </main>
       </div>
